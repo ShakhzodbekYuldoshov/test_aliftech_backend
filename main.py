@@ -29,7 +29,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/classify_gender/")
+@app.post("/classify_gender/")
 def classify_gender(
     age: int,
     height_cm: float,
