@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import pandas as pd
-from NormalizeDf import normalize_df
 
 
 # load model
@@ -56,19 +55,19 @@ def classify_gender(
 
     df = pd.DataFrame(dict(zip(col_names, data_list)), index=[0])
 
-    # normalize dataframe between 0 and 1 every value
-    normalized_df = normalize_df(df)
-
     # run model
-    prediction = model.predict(normalized_df)
+    prediction = model.predict(df)
+    probability = model.predict_proba(df)[0]
 
     # make classification according to prediction result
     if prediction[0] == 0:
         classification = 'Female'
+        probability = probability[0]
     elif prediction[0] == 1:
         classification = 'Male'
+        probability = probability[1]
 
-    return {"classification": str(classification)}
+    return {"classification": str(classification), "probability": str(probability)}
 
 
 if __name__ == '__main__':
