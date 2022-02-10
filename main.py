@@ -1,7 +1,14 @@
+import xgboost as xgb
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import pandas as pd
+from NormalizeDf import normalize_df
 
+
+# load model
+model = xgb.XGBClassifier()
+model.load_model('./models/best_gc.json')
 
 app = FastAPI()
 
@@ -40,8 +47,28 @@ def classify_gender(
     POST method used  for classifying gender
 
     '''
+    # prepare dataframe for prediction of the model
+    col_names = ['age', 'height_cm', 'weight_kg', 'body fat_%', 'diastolic', 'systolic',
+                 'gripForce', 'sit and bend forward_cm', 'sit-ups counts', 'broad jump_cm']
 
-    return {"item_id": 'hello', "q": '1'}
+    data_list = [age, height_cm, weight_kg, body_fat_percent, diastolic, systolic,
+                 grip_force, sit_and_bend_forward_cm, sit_ups_count, broad_jump_cm]
+
+    df = pd.DataFrame(dict(zip(col_names, data_list)), index=[0])
+
+    # normalize dataframe between 0 and 1 every value
+    normalized_df = normalize_df(df)
+
+    # run model
+    prediction = model.predict(normalized_df)
+
+    # make classification according to prediction result
+    if prediction[0] == 0:
+        classification = 'Female'
+    elif prediction[0] == 1:
+        classification = 'Male'
+
+    return {"classification": str(classification)}
 
 
 if __name__ == '__main__':
